@@ -1,7 +1,45 @@
 
 import csv
 import time
+import random
 from functools import reduce
+
+import math
+
+
+
+def isPrime(n):
+
+    if (n <= 1):
+        return False
+    if (n <= 3):
+        return True
+
+    if (n % 2 == 0 or n % 3 == 0):
+        return False
+
+    for i in range(5, int(math.sqrt(n) + 1), 6):
+        if (n % i == 0 or n % (i + 2) == 0):
+            return False
+
+    return True
+
+
+def nextPrime(N):
+    # Base case
+    if (N <= 1):
+        return 2
+    prime = N
+    while True:
+        prime = prime + 1
+        if isPrime(prime):
+            return prime
+
+
+
+
+
+
 def jaccard(A, B):
     union = A.union(B)
     intersection = A.intersection(B)
@@ -22,7 +60,29 @@ def getShingles(string, n):
 
     return shingles
 
+def hash(a,b,c,articles):
+    result={}
+    for article in articles:
+        hashValues={}
+        for shingle in articles[article]:
+            hashValues[shingle]=(a*shingle+b)%c
+        result[article]={min(hashValues, key=hashValues.get)}
+    return result
 
+def minhash(articles, numberOfHash):
+    m = max(i for v in articles.values() for i in v)
+    c = nextPrime(m)
+    result={}
+    for i in range(numberOfHash):
+        a = int(random.uniform(m/2,m))
+        b = int(random.uniform(m / 2, m))
+        ithMinHash=hash(a,b,c,articles)
+        if i == 0:
+            result = ithMinHash
+        else:
+            for article in ithMinHash:
+                result[article] = result[article].union(ithMinHash[article])
+    return result
 
 if __name__ == '__main__':
 
@@ -43,6 +103,8 @@ if __name__ == '__main__':
                 if s not in shinglesDict:
                     shinglesDict[s] = len(shinglesDict)
                 articlesDict[article].add(shinglesDict[s])
+
+        articlesDict = minhash(articlesDict, 10)
         for a in articlesDict:
             row = []
 
