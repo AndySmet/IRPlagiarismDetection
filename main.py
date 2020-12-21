@@ -71,12 +71,12 @@ def hash(a,b,c,articles):
 
 def minhash(articles, numberOfHash):
     m = max(i for v in articles.values() for i in v)
-    c = nextPrime(m)
+    c = nextPrime(m) #lengte van de hash is gekozen als het priemgetal groter dan het hoogste getal dat toegewezen is aan de shingles
     result={}
-    for i in range(numberOfHash):
+    for i in range(numberOfHash): #make for each article a column with 'numberOfHash' rows
         a = int(random.uniform(m/2,m))
-        b = int(random.uniform(m / 2, m))
-        ithMinHash=hash(a,b,c,articles)
+        b = int(random.uniform(m/2, m))
+        ithMinHash=hash(a,b,c,articles) #Hash function maps the 'numbers/shingles' to a new number from length 'c'
         if i == 0:
             result = ithMinHash
         else:
@@ -102,7 +102,7 @@ if __name__ == '__main__':
             for s in shingles:
                 if s not in shinglesDict:
                     shinglesDict[s] = len(shinglesDict)
-                articlesDict[article].add(shinglesDict[s])
+                articlesDict[article].add(shinglesDict[s]) #articlesDict contains the numbers per shingle per article
 
         articlesDict = minhash(articlesDict, 10)
         for a in articlesDict:
