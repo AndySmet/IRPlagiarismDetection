@@ -66,16 +66,22 @@ def hashArticles(a, b, c, articles):
         hashValues={}
         for shingle in articles[article]:
             hashValues[shingle]=(a*shingle+b)%c
+
         result[article]=[min(hashValues, key=hashValues.get)]
+
     return result
 
 def minhash(articles, numberOfHash):
     m = max(i for v in articles.values() for i in v)
-    c = nextPrime(m) #lengte van de hash is gekozen als het priemgetal groter dan het hoogste getal dat toegewezen is aan de shingles
+    c = nextPrime(m*2) #lengte van de hash is gekozen als het priemgetal groter dan het hoogste getal dat toegewezen is aan de shingles
     result={}
+
     for i in range(numberOfHash): #make for each article a column with 'numberOfHash' rows
-        a = int(random.uniform(m/2,m))
-        b = int(random.uniform(m/2, m))
+        random.seed(time.time())
+        a = int(random.uniform(1,m**5)%m)
+        random.seed(time.time())
+        b = int(random.uniform(1,m**5)%m)
+
         ithMinHash=hashArticles(a, b, c, articles) #Hash function maps the 'numbers/shingles' to a new number from length 'c'
         if i == 0:
             result = ithMinHash
@@ -137,8 +143,10 @@ if __name__ == '__main__':
                 articlesDict[article].append(shinglesDict[s]) #articlesDict contains the numbers per shingle per article
         articlesDict = minhash(articlesDict, 20)
         candidates = LSH(10, articlesDict)
+        print(len(candidates))
         counter=0
-
+        print(articlesDict['311'])
+        print(articlesDict['312'])
         for pair in candidates:
             score = jaccard(articlesDict[pair[0]], articlesDict[pair[1]])
             if score > 0.8:
