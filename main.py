@@ -41,8 +41,8 @@ def nextPrime(N):
 
 
 def jaccard(A, B):
-    union = A.union(B)
-    intersection = A.intersection(B)
+    union = set(A).union(set(B))
+    intersection = set(A).intersection(set(B))
     return len(intersection)/len(union)
 
 def getShingles(string, n):
@@ -60,13 +60,13 @@ def getShingles(string, n):
 
     return shingles
 
-def hash(a,b,c,articles):
+def hashArticles(a, b, c, articles):
     result={}
     for article in articles:
         hashValues={}
         for shingle in articles[article]:
             hashValues[shingle]=(a*shingle+b)%c
-        result[article]={min(hashValues, key=hashValues.get)}
+        result[article]=[min(hashValues, key=hashValues.get)]
     return result
 
 def minhash(articles, numberOfHash):
@@ -76,13 +76,45 @@ def minhash(articles, numberOfHash):
     for i in range(numberOfHash): #make for each article a column with 'numberOfHash' rows
         a = int(random.uniform(m/2,m))
         b = int(random.uniform(m/2, m))
-        ithMinHash=hash(a,b,c,articles) #Hash function maps the 'numbers/shingles' to a new number from length 'c'
+        ithMinHash=hashArticles(a, b, c, articles) #Hash function maps the 'numbers/shingles' to a new number from length 'c'
         if i == 0:
             result = ithMinHash
         else:
             for article in ithMinHash:
-                result[article] = result[article].union(ithMinHash[article])
+                result[article] = result[article]+(ithMinHash[article])
     return result
+
+def makeOnesMatrix(n):
+    matrix = []
+    for i in range(n):
+        row=[]
+        for j in range(n):
+            row.append(1.0)
+        matrix.append(row)
+    return matrix
+
+def LSH(b, signatures):
+    r = int(len(list(signatures.values())[0])/b)
+    candidates=[]
+    for i in range(b):
+        hashBand={}
+        for article in signatures:
+            band = list(signatures[article][i * r:i * r + r])
+            h = hash(tuple(band)) % 1000000
+            if h in hashBand:
+                hashBand[h].append(article)
+            else:
+                hashBand[h]=[article]
+        c = [signatures for signatures in hashBand.values() if len(signatures) > 1]
+        for pairs in c:
+            for k in range(len(pairs)-1):
+                for l in range(k+1,len(pairs)):
+                    if not((pairs[k], pairs[l]) in candidates or (pairs[l], pairs[k]) in candidates):
+                        candidates.append((pairs[k], pairs[l]))
+
+
+    return candidates
+
 
 if __name__ == '__main__':
 
@@ -92,30 +124,46 @@ if __name__ == '__main__':
         next(reader)
         articles = {rows[0]:rows[1] for rows in reader}
 
-        jaccardMatrix=[]
+
 
         shinglesDict={}
         articlesDict={}
         for article in articles:
-            articlesDict[article]=set()
-            shingles = set(getShingles(articles[article],2))
+            articlesDict[article]=list()
+            shingles = getShingles(articles[article],4)
             for s in shingles:
                 if s not in shinglesDict:
                     shinglesDict[s] = len(shinglesDict)
-                articlesDict[article].add(shinglesDict[s]) #articlesDict contains the numbers per shingle per article
+                articlesDict[article].append(shinglesDict[s]) #articlesDict contains the numbers per shingle per article
+        articlesDict = minhash(articlesDict, 20)
+        candidates = LSH(10, articlesDict)
+        counter=0
 
-        articlesDict = minhash(articlesDict, 10)
-        for a in articlesDict:
-            row = []
+        for pair in candidates:
+            score = jaccard(articlesDict[pair[0]], articlesDict[pair[1]])
+            if score > 0.8:
+                print(pair[0], pair[1], score)
 
-            for b in articlesDict:
-                if a > b:
-                    score=jaccard(articlesDict[a], articlesDict[b])
-                    if score > 0.8:
-                        print(a,b,score)
-                    row.append(score)
-            jaccardMatrix.append(row)
-
+                counter += 1
+        # jaccardMatrix = makeOnesMatrix(len(articlesDict))
+        # signatureMatrix = []
+        # aIndex = 0
+        # counter=0
+        # for a in articlesDict:
+            # signatureMatrix.append(list(articlesDict[a]))
+            # bIndex = 0
+            # for b in articlesDict:
+            #     if bIndex > aIndex:
+            #         score=jaccard(articlesDict[a], articlesDict[b])
+            #         if score > 0.8:
+            #             print(a,b,score)
+            #             counter += 1
+                    # jaccardMatrix[aIndex][bIndex] = score
+                    # jaccardMatrix[bIndex][aIndex] = score
+                # bIndex += 1
+            # aIndex += 1
+        #
+        print(counter)
         print(time.time()-timestart)
 
 
