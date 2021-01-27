@@ -168,14 +168,23 @@ if __name__ == '__main__':
                     counter += 1
         else:
             #iterate over all articles and  compute the jaccard score, print if its over 0.8
+            #histo = []
             for a in articlesDict:
                 for b in articlesDict:
                     if int(b) > int(a):
                         score=jaccard(articlesDict[a], articlesDict[b])
+                        #histo.append(score*100)
                         if score > similarityThreshold:
                             # print(a,b,score)
                             results[(a, b)] = score
                             counter += 1
+            # Representation by histogram without LSH but using MinHash to represent the documents
+            #plt.hist(histo, bins=10, histtype='bar', ec='black')
+            #plt.xlabel('Similarity between documents in %')
+            #plt.ylabel('Number of documents')
+            #plt.title('Number of documents in function of their similarity with each other')
+            #plt.yscale('log', nonposy='clip')
+            #plt.show()
 
 
         with open('result.csv', mode='w') as results_file:
