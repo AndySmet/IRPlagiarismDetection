@@ -120,6 +120,7 @@ def LSH(b, signatures):
                     if not((pairs[k], pairs[l]) in candidates or (pairs[l], pairs[k]) in candidates):
                         candidates.append((pairs[k], pairs[l]))
 
+
     return candidates
 
 
@@ -202,4 +203,5 @@ if __name__ == '__main__':
 
         print(counter)
         print(time.time()-timestart)
+
 
