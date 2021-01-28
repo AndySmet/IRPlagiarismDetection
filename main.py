@@ -3,6 +3,7 @@ import csv
 import time
 import random
 from functools import reduce
+import matplotlib.pyplot as plt
 
 import math
 
@@ -119,22 +120,21 @@ def LSH(b, signatures):
                     if not((pairs[k], pairs[l]) in candidates or (pairs[l], pairs[k]) in candidates):
                         candidates.append((pairs[k], pairs[l]))
 
-
     return candidates
 
 
 if __name__ == '__main__':
     #initialize parameters
     LSH_Bands=20
-    minHashingHashes=60
+    minHashingHashes=7*20
     shingleLength=4
     similarityThreshold=0.8
-    filename='news_articles_small.csv'
+    filename='news_articles_large.csv'
     minHashEnabled=True
     LSHEnabled=True
+    showHistogram=False
 
-
-
+    results=dict()
     #start time for program
     timestart = time.time()
     #read from file
@@ -166,19 +166,40 @@ if __name__ == '__main__':
             for pair in candidates:
                 score = jaccard(articlesDict[pair[0]], articlesDict[pair[1]])
                 if score > similarityThreshold:
-                    print(pair[0], pair[1], score)
+                    results[(pair[0], pair[1])] = score
+                    # print(pair[0], pair[1], score)
                     counter += 1
         else:
             #iterate over all articles and  compute the jaccard score, print if its over 0.8
+            histo = []
             for a in articlesDict:
                 for b in articlesDict:
                     if int(b) > int(a):
                         score=jaccard(articlesDict[a], articlesDict[b])
-                        if score > 0.8:
-                            print(a,b,score)
+                        histo.append(score*100)
+                        if score > similarityThreshold:
+                            # print(a,b,score)
+                            results[(a, b)] = score
                             counter += 1
+            if showHistogram:
+                # Representation by histogram without LSH but using MinHash to represent the documents
+                plt.hist(histo, bins=10, histtype='bar', ec='black')
+                plt.xlabel('Similarity between documents in %')
+                plt.ylabel('Number of documents')
+                plt.title('Number of documents in function of their similarity with each other')
+                plt.yscale('log', nonposy='clip')
+                plt.show()
+
+
+        with open('result.csv', mode='w') as results_file:
+            fieldnames = ['doc_id1', 'doc_id2', 'similarity']
+            results_writer = csv.DictWriter(results_file, fieldnames=fieldnames)
+            results_writer.writeheader()
+            for result in results:
+                results_writer.writerow({'doc_id1':result[0], 'doc_id2':result[1], 'similarity':results[result]})
+
+
 
         print(counter)
         print(time.time()-timestart)
-
 
